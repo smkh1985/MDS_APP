@@ -8,6 +8,11 @@ from django.db import models
 from rest_framework import serializers
 
 
+from rest_framework.exceptions import NotFound, ValidationError 
+from django.http import Http404
+from django.shortcuts import get_object_or_404
+
+
 class ProductList(APIView):
     """
     List All Products or Create a new Product
@@ -25,9 +30,43 @@ class ProductList(APIView):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             except:
-                raise serializers.ValidationError({'WaterType': 'Water and Type combination should be Unique'})
+                raise ValidationError({'WaterType': 'Water and Type combination should be Unique'})
 
            
         else:
-            return Response(serializer.error_messages, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class ProductDetail(APIView):
+    serializer_class = ProductSerializer
+
+    def get(self,request , pk,format =None):
+
+        product = get_object_or_404(Product,pk = pk)
+        # ====> OR Begin <=====
+        # try :
+        #     product = Product.objects.get(id=pk)
+        # except Product.DoesNotExist:
+        #     raise NotFound
+        # ====> OR End <=====
+        serializer = ProductSerializer(product)
+        return Response(serializer.data)
+
+    def put(self,request,pk,format=None):
+        product = get_object_or_404(Product,pk = pk)
+        serializer = ProductSerializer(product, data = request.data , partial=True)
+        if serializer.is_valid():
+            try:
+                serializer.save()
+                return Response(serializer.data , status= status.HTTP_200_OK)
+            except:
+                raise ValidationError({'WaterType': 'Water and Type combination should be Unique'})
+        else:
+            # raise ValidationError
+            print(serializer.data)
+            return Response(serializer.errors , status= status.HTTP_400_BAD_REQUEST)
+
+    def delete(self,request,pk,format = None):
+        product = get_object_or_404(Product,pk = pk)
+        product.delete()
+        return Response(status= status.HTTP_204_NO_CONTENT) # the best response for deletion is HTTP204
