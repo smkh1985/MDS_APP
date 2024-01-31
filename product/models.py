@@ -9,8 +9,8 @@ class Product(models.Model):
     ]
 
     SIZE_CHOICES = [
-        (3, 'Large (5 Gallon)'),
-        (5, 'Small (3 Gallon)'),
+        (5, 'Large (5 Gallon)'),
+        (3, 'Small (3 Gallon)'),
     ]
 
     water_type = models.CharField("Water Type" , max_length = 3 , choices = WATER_TYPES)
