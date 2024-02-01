@@ -5,8 +5,13 @@ from .serializers import UserSerializer,RegisterSerializer
 
 from django.contrib.auth.models import User
 
+from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
-from rest_framework import generics
+
+from rest_framework import status
+
+from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import NotFound
 
 # Class based view to Get User Details using Token Authentication
 class UserDetailAPI(APIView):
@@ -17,7 +22,16 @@ class UserDetailAPI(APIView):
     serializer = UserSerializer(user)
     return Response(serializer.data)
 
-#Class based view to register user
-class RegisterUserAPIView(generics.CreateAPIView):
-  permission_classes = (AllowAny,)
+
+class UserSignup(APIView):
   serializer_class = RegisterSerializer
+
+  def post(self,request,format = None):
+    serializer = RegisterSerializer(data = request.data)
+    if serializer.is_valid():
+      saved_user = serializer.save()
+      token = Token.objects.create(user = saved_user)
+      return Response({'Token':token.key , 'username':saved_user.username})
+    else:
+      return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
+    
